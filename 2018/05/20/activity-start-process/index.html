@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2018/5 | Hexo</title>
+  <title>activity-start-process | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://yoursite.com/archives/2018/05/index.html">
+  <meta name="description" content="在activity启动中的一些重要概念 ActivityManagerServices，简称AMS，服务端对象，负责系统中所有Activity的生命周期 ActivityThread，App的真正入口。当开启App之后，会调用main()开始运行，开启消息循环队列，这就是传说中的UI线程或者叫主线程。与ActivityManagerServices配合，一起完成Activity的管理工作 Appl">
+<meta name="keywords" content="Activity启动流程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="activity-start-process">
+<meta property="og:url" content="http://yoursite.com/2018/05/20/activity-start-process/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="在activity启动中的一些重要概念 ActivityManagerServices，简称AMS，服务端对象，负责系统中所有Activity的生命周期 ActivityThread，App的真正入口。当开启App之后，会调用main()开始运行，开启消息循环队列，这就是传说中的UI线程或者叫主线程。与ActivityManagerServices配合，一起完成Activity的管理工作 Appl">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-05-20T04:22:25.648Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="activity-start-process">
+<meta name="twitter:description" content="在activity启动中的一些重要概念 ActivityManagerServices，简称AMS，服务端对象，负责系统中所有Activity的生命周期 ActivityThread，App的真正入口。当开启App之后，会调用main()开始运行，开启消息循环队列，这就是传说中的UI线程或者叫主线程。与ActivityManagerServices配合，一起完成Activity的管理工作 Appl">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -150,36 +155,93 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-activity-start-process" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/05/20/activity-start-process/" class="archive-article-date">
-  	<time datetime="2018-05-19T16:02:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-20</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/05/20/activity-start-process/">activity-start-process</a>
+    <h1 class="article-title" itemprop="name">
+      activity-start-process
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2018/05/20/activity-start-process/" class="archive-article-date">
+  	<time datetime="2018-05-19T16:02:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="在activity启动中的一些重要概念"><a href="#在activity启动中的一些重要概念" class="headerlink" title="在activity启动中的一些重要概念"></a>在activity启动中的一些重要概念</h2><ol>
+<li>ActivityManagerServices，简称AMS，服务端对象，负责系统中所有Activity的生命周期</li>
+<li>ActivityThread，App的真正入口。当开启App之后，会调用main()开始运行，开启消息循环队列，这就是传说中的UI线程或者叫主线程。与ActivityManagerServices配合，一起完成Activity的管理工作</li>
+<li>ApplicationThread，存在于客户端中，用来实现ActivityManagerService与ActivityThread之间的交互。在ActivityManagerService需要管理相关Application中的Activity的生命周期时，通过ApplicationThread的代理（ApplicationThreadProxy）对象与ActivityThread通讯。</li>
+<li>ApplicationThreadProxy，是ApplicationThread在服务器端的代理，负责和客户端的ApplicationThread通讯。AMS就是通过该代理与ActivityThread进行通信的。</li>
+<li>Instrumentation，每一个应用程序只有一个Instrumentation对象，每个Activity内都有一个对该对象的引用。Instrumentation可以理解为应用进程的管家，ActivityThread要创建或暂停某个Activity时，都需要通过Instrumentation来进行具体的操作。</li>
+<li>ActivityStack，Activity在AMS的栈管理，用来记录已经启动的Activity的先后关系，状态信息等。通过ActivityStack决定是否需要启动新的进程。</li>
+<li>ActivityRecord，ActivityStack的管理对象，每个Activity在AMS对应一个ActivityRecord，来记录Activity的状态以及其他的管理信息。其实就是服务器端的Activity对象的映像。</li>
+<li>TaskRecord，AMS抽象出来的一个“任务”的概念，是记录ActivityRecord的栈，一个“Task”包含若干个ActivityRecord。AMS用TaskRecord确保Activity启动和退出的顺序。如果你清楚Activity的4种launchMode，那么对这个概念应该不陌生。</li>
+</ol>
+<h2 id="让我们开始分析具体的调用过程吧"><a href="#让我们开始分析具体的调用过程吧" class="headerlink" title="让我们开始分析具体的调用过程吧"></a>让我们开始分析具体的调用过程吧</h2><p>在Android系统中，任何一个Activity的启动都是由AMS和应用程序进程（主要是ActivityThread）相互配合来完成的。AMS服务统一调度系统中所有进程的Activity启动，而每个Activity的启动过程则由其所属的进程具体来完成。</p>
+<p>调度过程可以理解为下面的这个情景：<br>AMS是董事会，负责指挥和调度的，ActivityThread是老板，虽然说家里的事自己说了算，但是需要听从AMS的指挥，而Instrumentation则是老板娘，负责家里的大事小事，但是一般不抛头露面，听一家之主ActivityThread的安排。</p>
+<p><strong>如何理解AMS和ActivityThread之间的Binder通信</strong></p>
+<ul>
+<li>客户端：ActivityManagerProxy =====&gt;Binder驱动=====&gt; ActivityManagerService：服务器<br>而且由于继承了同样的公共接口类，ActivityManagerProxy提供了与ActivityManagerService一样的函数原型，使用户感觉不出Server是运行在本地还是远端，从而可以更加方便的调用这些重要的系统服务。<br>但是！这里Binder通信是单方向的，即从ActivityManagerProxy指向ActivityManagerService的，如果AMS想要通知ActivityThread做一些事情，应该咋办呢？<br>还是通过Binder通信，不过是换了另外一对，换成了ApplicationThread和ApplicationThreadProxy。</li>
+<li>客户端：ApplicationThread &lt;=====Binder驱动&lt;===== ApplicationThreadProxy：服务器</li>
+</ul>
+<p>前面我们说到，在调用<code>startActivity()</code>的时候，实际上调用的是<code>mInstrumentation.execStartActivity()</code>,但是到这里还没完呢！里面又调用了下面的方法<code>ActivityManagerNative.getDefault().startActivity</code><br>这里的<code>ActivityManagerNative.getDefault()</code>返回的就是<code>ActivityManagerService</code>的远程接口，即<code>ActivityManagerProxy</code>。</p>
+<p><strong>代码如下：</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">public abstract class ActivityManagerNative extends Binder implements IActivityManager</span><br><span class="line">&#123;</span><br><span class="line">//从类声明上，我们可以看到ActivityManagerNative是Binder的一个子类，而且实现了IActivityManager接口</span><br><span class="line"> static public IActivityManager getDefault() &#123;</span><br><span class="line">        return gDefault.get();</span><br><span class="line">    &#125;</span><br><span class="line"> //通过单例模式获取一个IActivityManager对象，这个对象通过asInterface(b)获得</span><br><span class="line"> private static final Singleton&lt;IActivityManager&gt; gDefault = new Singleton&lt;IActivityManager&gt;() &#123;</span><br><span class="line">        protected IActivityManager create() &#123;</span><br><span class="line">            IBinder b = ServiceManager.getService(&quot;activity&quot;);</span><br><span class="line">            if (false) &#123;</span><br><span class="line">                Log.v(&quot;ActivityManager&quot;, &quot;default service binder = &quot; + b);</span><br><span class="line">            &#125;</span><br><span class="line">            IActivityManager am = asInterface(b);</span><br><span class="line">            if (false) &#123;</span><br><span class="line">                Log.v(&quot;ActivityManager&quot;, &quot;default service = &quot; + am);</span><br><span class="line">            &#125;</span><br><span class="line">            return am;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line">//最终返回的还是一个ActivityManagerProxy对象</span><br><span class="line">static public IActivityManager asInterface(IBinder obj) &#123;</span><br><span class="line">        if (obj == null) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">        IActivityManager in =</span><br><span class="line">            (IActivityManager)obj.queryLocalInterface(descriptor);</span><br><span class="line">        if (in != null) &#123;</span><br><span class="line">            return in;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">     //这里面的Binder类型的obj参数会作为ActivityManagerProxy的成员变量保存为mRemote成员变量，负责进行IPC通信</span><br><span class="line">        return new ActivityManagerProxy(obj);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><em>Binder本质上只是一种底层通信方式，和具体服务没有关系。（最终使用的是内存共享）为了提供具体服务，Server必须提供一套接口函数以便Client通过远程访问使用各种服务。这时通常采用Proxy设计模式：将接口函数定义在一个抽象类中，Server和Client都会以该抽象类为基类实现所有接口函数，所不同的是Server端是真正的功能实现，而Client端是对这些函数远程调用请求的包装。</em></p>
+<p><strong>最后引用一段罗升阳大师对activity启动的概括</strong></p>
+<blockquote>
+<p>Step 1. 无论是通过Launcher来启动Activity，还是通过Activity内部调用startActivity接口来启动新的Activity，都通过Binder进程间通信进入到ActivityManagerService进程中，并且调用ActivityManagerService.startActivity接口；<br>Step 2. ActivityManagerService调用ActivityStack.startActivityMayWait来准备要启动的Activity的相关信息；<br>Step 3. ActivityStack通过ApplicationThreadProxy来通知app进程中的ApplicationThread要进行Activity启动调度了，这里的ApplicationThread代表的是调用ActivityManagerService.startActivity接口的进程，对于通过点击应用程序图标的情景来说，这个进程就是Launcher了，而对于通过在Activity内部调用startActivity的情景来说，这个进程就是这个Activity所在的进程了；<br>Step 4. ApplicationThread不执行真正的启动操作，它通过调用ActivityManagerService.activityPaused接口进入到ActivityManagerService进程中，看看是否需要创建新的进程来启动Activity；<br>Step 5. 对于通过点击应用程序图标来启动Activity的情景来说，ActivityManagerService在这一步中，会调用startProcessLocked来创建一个新的进程，而对于通过在Activity内部调用startActivity来启动新的Activity来说，这一步是不需要执行的，因为新的Activity就在原来的Activity所在的进程中进行启动；<br>Step 6. ActivityManagerServic调用ApplicationThread.scheduleLaunchActivity接口，通知相应的进程执行启动Activity的操作；<br>Step 7. ApplicationThread把这个启动Activity的操作转发给ActivityThread，ActivityThread通过ClassLoader导入相应的Activity类，然后把它启动起来。</p>
+</blockquote>
+<p>#线程安全的单例模式：</p>
+<ol>
+<li><strong>多线程安全单例模式实例一(不使用同步锁)：</strong><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;</span><br><span class="line">     private static Singleton sin=new Singleton(); //直接初始化一个实例对象</span><br><span class="line">     private Singleton()&#123; //private类型的构造函数，保证其他类对象不能直接new一个该对象的实例</span><br><span class="line">     &#125;</span><br><span class="line">     public static Singleton getSin()&#123; //该类唯一的一个public方法    </span><br><span class="line">         return sin;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>上述代码中的一个缺点是该类加载的时候就会直接new 一个静态对象出来，当系统中这样的类较多时，会使得启动速度变慢 。现在流行的设计都是讲“延迟加载”，我们可以在第一次使用的时候才初始化第一个该类对象。所以这种适合在小系统。</p>
+<ol start="2">
+<li><strong>多线程安全单例模式实例二(使用同步方法)</strong><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;  </span><br><span class="line">    private static Singleton instance;  </span><br><span class="line">    private Singleton ()&#123;&#125;   </span><br><span class="line">    public static synchronized Singleton getInstance()&#123;    //对获取实例的方法进行同步</span><br><span class="line">    if (instance == null)     </span><br><span class="line">	    instance = new Singleton(); </span><br><span class="line">	    return instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>上述代码中的一次锁住了一个方法， 这个粒度有点大 ，改进就是只锁住其中的new语句就OK。就是所谓的“双重锁”机制。</p>
+<ol start="3">
+<li><strong>多线程安全单例模式实例三(使用双重同步锁)</strong><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;  </span><br><span class="line">    private static Singleton instance;  </span><br><span class="line">    private Singleton ()&#123;&#125;   </span><br><span class="line">    public static Singleton getInstance()&#123;    //对获取实例的方法进行同步</span><br><span class="line">        if (instance == null)&#123;</span><br><span class="line">             synchronized(Singleton.class)&#123;</span><br><span class="line">             if (instance == null)</span><br><span class="line">                  instance = new Singleton(); </span><br><span class="line">             &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return instance;     </span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -191,46 +253,106 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2018/05/20/activity-start-process/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/05/19/hello-world/" class="archive-article-date">
-  	<time datetime="2018-05-19T15:18:59.290Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-19</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/19/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Hello World</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/05/19/hello-world/">Hello World</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
+
+  
 
 
           </div>
@@ -253,8 +375,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
