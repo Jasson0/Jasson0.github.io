@@ -6,19 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2018 | Leon的Blog</title>
+  <title>携程插件化 | Leon的Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="东南大学15级，现就职于拼多多。高级android工程师兼菜鸟前端工程师。">
-<meta name="keywords" content="“android，前端”">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Leon的Blog">
-<meta property="og:url" content="http://yoursite.com/archives/2018/index.html">
+  <meta name="description" content="以下的语言组织可能有点凌乱，自己理解的携程插件化流程。  携程的所有bundle都是以.so的形式存放在apk的assets/baseres中，在第一次加载的时候，会将so解压出来将so解压出来之后，放在携程目录的子目录nativeLibs中。ok到这的话可以先不去管了。  所有的代码侵入和bundle 加载方法的入口，都在CtripBaseApplication的attachBaseContex">
+<meta name="keywords" content="携程插件化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="携程插件化">
+<meta property="og:url" content="http://yoursite.com/2018/05/21/ctrip-pluggable/index.html">
 <meta property="og:site_name" content="Leon的Blog">
-<meta property="og:description" content="东南大学15级，现就职于拼多多。高级android工程师兼菜鸟前端工程师。">
+<meta property="og:description" content="以下的语言组织可能有点凌乱，自己理解的携程插件化流程。  携程的所有bundle都是以.so的形式存放在apk的assets/baseres中，在第一次加载的时候，会将so解压出来将so解压出来之后，放在携程目录的子目录nativeLibs中。ok到这的话可以先不去管了。  所有的代码侵入和bundle 加载方法的入口，都在CtripBaseApplication的attachBaseContex">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-05-21T09:18:42.230Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Leon的Blog">
-<meta name="twitter:description" content="东南大学15级，现就职于拼多多。高级android工程师兼菜鸟前端工程师。">
+<meta name="twitter:title" content="携程插件化">
+<meta name="twitter:description" content="以下的语言组织可能有点凌乱，自己理解的携程插件化流程。  携程的所有bundle都是以.so的形式存放在apk的assets/baseres中，在第一次加载的时候，会将so解压出来将so解压出来之后，放在携程目录的子目录nativeLibs中。ok到这的话可以先不去管了。  所有的代码侵入和bundle 加载方法的入口，都在CtripBaseApplication的attachBaseContex">
   
     <link rel="alternative" href="/atom.xml" title="Leon的Blog" type="application/atom+xml">
   
@@ -138,36 +139,56 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-ctrip-pluggable" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/05/21/ctrip-pluggable/" class="archive-article-date">
-  	<time datetime="2018-05-21T09:13:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-21</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/05/21/ctrip-pluggable/">携程插件化</a>
+    <h1 class="article-title" itemprop="name">
+      携程插件化
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2018/05/21/ctrip-pluggable/" class="archive-article-date">
+  	<time datetime="2018-05-21T09:13:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><em>以下的语言组织可能有点凌乱，自己理解的携程插件化流程。</em></p>
+<ul>
+<li><p>携程的所有bundle都是以.so的形式存放在apk的assets/baseres中，在第一次加载的时候，会将so解压出来<br>将so解压出来之后，放在携程目录的子目录nativeLibs中。ok到这的话可以先不去管了。</p>
+</li>
+<li><p>所有的代码侵入和bundle 加载方法的入口，都在<code>CtripBaseApplication</code>的<code>attachBaseContext</code> 中。</p>
+</li>
+</ul>
+<h2 id="首先需要解决的是资源冲突问题"><a href="#首先需要解决的是资源冲突问题" class="headerlink" title="首先需要解决的是资源冲突问题"></a>首先需要解决的是资源冲突问题</h2><p>在Android中，所有资源会在Java源码层面生成对应的常量ID，这些ID会记录到R.java文件中，参与到之后的代码编译阶段中。在R.java文件中，Android资源在编译过程中会生成所有资源的ID，作为常量统一存放在R类中供其他代码引用。在R类中生成的每一个int型四字节资源ID，实际上都由三个字段组成。第一字节代表了Package，第二字节为分类，三四字节为类内ID。</p>
+<ul>
+<li>public static final int cancel = 0x01040000;<br>//android.jar中的资源，其PackageID为0x01 </li>
+<li>public static final int zip_code = 0x7f090f2e;<br>//用户app中的资源，PackageID总是0x7F </li>
+</ul>
+<p>插件化最需要解决的是资源命名问题。 修改aapt的源码中的ResourceTable中根据mPackageType分配不同的packageId,在默认状态下。</p>
+<p><strong>运行时资源的加载：</strong></p>
+<p>平常我们使用资源，都是通过AssetManager类和Resources类来访问的。获取它们的方法位于Context类中。它们是两个抽象方法，具体的实现在ContextImpl类中。ContextImpl类中初始化Resources对象后，后续Context各子类包括Activity、Service等组件就都可以通过这两个方法读取资源了。</p>
+<p>在ctrip中，我们会在<code>CtripBaseApplication</code>中<code>attachBaseContext</code>里去hook掉Resources。<br>最终调用<code>DelegateResource.newDelegateResourcesInter(Application application, Resources resources)</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">private static void newDelegateResourcesInter(Application application, Resources resources) throws Exception &#123;</span><br><span class="line">        List&lt;Bundle&gt; bundles = Framework.getBundles();</span><br><span class="line">        if (bundles != null &amp;&amp; !bundles.isEmpty()) &#123;</span><br><span class="line">            Resources delegateResources;</span><br><span class="line">            List&lt;String&gt; arrayList = new ArrayList();</span><br><span class="line">            Set&lt;String&gt; systemAssetPaths = getSystemAssetPath(application);</span><br><span class="line">            arrayList.addAll(systemAssetPaths);</span><br><span class="line">            for (Bundle bundle : bundles) &#123;</span><br><span class="line">                arrayList.add(((BundleImpl) bundle).getArchive().getArchiveFile().getAbsolutePath());</span><br><span class="line">            &#125;</span><br><span class="line">            AssetManager assetManager = AssetManager.class.newInstance();</span><br><span class="line">            for (String str : arrayList) &#123;</span><br><span class="line">                if ((int) SysHacks.AssetManager_addAssetPath.invoke(assetManager, str) == 0) &#123;</span><br><span class="line">                    for (int i = 0; i &lt; 3; i++) &#123;</span><br><span class="line">                        if ((int) SysHacks.AssetManager_addAssetPath.invoke(assetManager, str) != 0) &#123;</span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        if (i == 3) &#123;</span><br><span class="line">                            log.log(&quot;AssetPath:&quot; + str + &quot; add fail&quot;, Logger.LogLevel.ERROR);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            //处理小米UI资源</span><br><span class="line">            if (resources == null || !resources.getClass().getName().equals(&quot;android.content.res.MiuiResources&quot;)) &#123;</span><br><span class="line">                delegateResources = new DelegateResources(assetManager, resources);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                Constructor declaredConstructor = Class.forName(&quot;android.content.res.MiuiResources&quot;).getDeclaredConstructor(new Class[]&#123;AssetManager.class, DisplayMetrics.class, Configuration.class&#125;);</span><br><span class="line">                declaredConstructor.setAccessible(true);</span><br><span class="line">                delegateResources = (Resources) declaredConstructor.newInstance(new Object[]&#123;assetManager, resources.getDisplayMetrics(), resources.getConfiguration()&#125;);</span><br><span class="line">            &#125;</span><br><span class="line">            RuntimeArgs.delegateResources = delegateResources;</span><br><span class="line">            AndroidHack.injectResources(application, delegateResources);</span><br><span class="line"></span><br><span class="line">            StringBuffer stringBuffer = new StringBuffer();</span><br><span class="line">            stringBuffer.append(&quot;newDelegateResources [&quot;);</span><br><span class="line">            for (int i = 0; i &lt; arrayList.size(); i++) &#123;</span><br><span class="line">                if (i &gt; 0) &#123;</span><br><span class="line">                    stringBuffer.append(&quot;,&quot;);</span><br><span class="line">                &#125;</span><br><span class="line">                stringBuffer.append(arrayList.get(i));</span><br><span class="line">            &#125;</span><br><span class="line">            stringBuffer.append(&quot;]&quot;);</span><br><span class="line">            log.log(stringBuffer.toString(), Logger.LogLevel.DBUG);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>代码中<code>RuntimeArgs.delegateResources = delegateResources;</code>是将ctrip自己创建的resource保存在RuntimeArgs。<br>同时，我们hook了ContextImpl，实现类为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class ContextImplHook extends ContextWrapper &#123;</span><br><span class="line">    static final Logger log;</span><br><span class="line"></span><br><span class="line">    static &#123;</span><br><span class="line">        log = LoggerFactory.getLogcatLogger(&quot;ContextImplHook&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public ContextImplHook(Context context) &#123;</span><br><span class="line">        super(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Resources getResources() &#123;</span><br><span class="line">        log.log(&quot;getResources is invoke&quot;, Logger.LogLevel.INFO);</span><br><span class="line">        return RuntimeArgs.delegateResources;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public AssetManager getAssets() &#123;</span><br><span class="line">        log.log(&quot;getAssets is invoke&quot;, Logger.LogLevel.INFO);</span><br><span class="line">        return RuntimeArgs.delegateResources.getAssets();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>从中获得的AssetManager和Resource都是之前newDelegateResourcesInter中创建的。</p>
+<p>以上我们已经可以做到加载插件资源了，但使用了一大堆定制类实现。要做到“无缝”体验，还需要一步：使用Instrumentation来接管所有Activity、Service等组件的创建（当然也就包含了它们使用到的Resources类）。</p>
+<p>话说Activity、Service等系统组件，都会经由android.app.ActivityThread类在主线程中执行。ActivityThread类有一个成员叫mInstrumentation，它会负责创建Activity等操作，这正是注入我们的修改资源类的最佳时机。通过篡改mInstrumentation为我们自己的InstrumentationHook，每次创建Activity的时候顺手把它的mResources类偷天换日为我们的DelegateResources</p>
+<p>然后剩下的就是dex的加载，ctrip使用的是pathclassloader,在pathclassloader的dexElements中追加<br>我们之前解压出来的classes.dex的路径，其实这就是multidex的做法。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -179,84 +200,106 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2018/05/21/ctrip-pluggable/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/05/20/activity-start-process/" class="archive-article-date">
-  	<time datetime="2018-05-19T16:02:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-20</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/20/activity-start-process/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Activity启动流程</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/05/20/activity-start-process/">Activity启动流程</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Activity启动流程</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/05/19/hello-world/" class="archive-article-date">
-  	<time datetime="2018-05-19T15:18:59.290Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-05-19</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/05/19/hello-world/">Hello World</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
 
 
           </div>
@@ -279,8 +322,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
